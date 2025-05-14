@@ -75,6 +75,12 @@ def compare_custom_periods(s1, e1, s2, e2):
     }
 
 def process_prompt(prompt):
+    prompt = prompt.lower().strip()
+
+    # Handle greeting
+    if prompt in ["hi", "hello", "hey", "hi there", "hello azure"]:
+        return {"response": "Hi, I'm Azure Cost AI 👋, How can i be of help?"}
+
     if "compare" in prompt:
         custom = parse_custom_dates(prompt)
         if custom:
