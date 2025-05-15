@@ -81,6 +81,13 @@ def process_prompt(prompt):
     if prompt in ["hi", "hello", "hey", "hi there", "hello azure"]:
         return {"response": "Hi, I'm Azure Cost AI 👋, How can i be of help?"}
 
+    # Login to Azure
+    if prompt in ["login to azure", "start process"]:
+        return {"require_login": True}
+    
+    if prompt in ["list subscriptions", "subscriptions"] in prompt:
+        return {"subscriptions": list_azure_subscriptions()}
+
     if "compare" in prompt:
         custom = parse_custom_dates(prompt)
         if custom:
@@ -110,3 +117,28 @@ def compare_periods(period1, period2):
         period2: c2.get("properties", {}).get("rows", []),
         "comparison": f"{period1} vs {period2}"
     }
+
+def list_azure_subscriptions():
+    cmd = ["az", "account", "list", "--output", "json"]
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    if result.returncode == 0:
+        try:
+            return json.loads(result.stdout)
+        except json.JSONDecodeError:
+            return {"error": "Failed to parse subscription list."}
+    else:
+        return {"error": result.stderr.strip()}
+
+def login_with_credentials(username, password, tenant):
+    cmd = [
+        "az", "login",
+        "--service-principal",
+        "-u", username,
+        "-p", password,
+        "--tenant", tenant
+    ]
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    if result.returncode == 0:
+        return {"message": "Login successful"}
+    else:
+        return {"error": result.stderr.strip()}
